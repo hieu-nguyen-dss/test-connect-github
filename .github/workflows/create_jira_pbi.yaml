@@ -26,8 +26,64 @@ jobs:
           PR_BODY="${{ github.event.pull_request.body }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
 
-          # Tạo nội dung mô tả cho Jira
-          JIRA_DESCRIPTION="### Pull Request Created by $PR_AUTHOR\n\n**Title**: $PR_TITLE\n\n**Description**:\n$PR_BODY\n\n**Link**: [PR #${{ github.event.number }}]($PR_URL)"
+          # Tạo mô tả dưới dạng Atlassian Document Format (ADF)
+          JIRA_DESCRIPTION=$(cat <<EOF
+          {
+            "type": "doc",
+            "version": 1,
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Pull Request Created by $PR_AUTHOR"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Title: $PR_TITLE"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Description: $PR_BODY"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Link: "
+                  },
+                  {
+                    "type": "text",
+                    "text": "$PR_URL",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "$PR_URL"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
 
           # Payload JSON để tạo Jira Issue
           JIRA_PAYLOAD=$(cat <<EOF
@@ -37,7 +93,7 @@ jobs:
                 "key": "$JIRA_PROJECT_KEY"
               },
               "summary": "PR: $PR_TITLE",
-              "description": "$JIRA_DESCRIPTION",
+              "description": $JIRA_DESCRIPTION,
               "issuetype": {
                 "name": "Story"
               }
