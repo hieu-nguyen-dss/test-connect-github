@@ -130,27 +130,4 @@ jobs:
               -H "Content-Type: application/json" \
               --data "{\"fields\": {\"summary\": \"$UPDATED_TITLE\", \"description\": $JIRA_DESCRIPTION}}" \
               "$JIRA_BASE_URL/rest/api/3/issue/$EXISTING_ISSUE_KEY"
-          else
-            echo "Creating a new Jira Issue"
-            JIRA_PAYLOAD=$(cat <<EOF
-            {
-              "fields": {
-                "project": {
-                  "key": "$JIRA_PROJECT_KEY"
-                },
-                "summary": "$PR_TITLE",
-                "description": $JIRA_DESCRIPTION,
-                "issuetype": {
-                  "name": "Story"
-                }
-              }
-            }
-            EOF
-            )
-
-            curl -s -X POST \
-              -H "Content-Type: application/json" \
-              -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-              --data "$JIRA_PAYLOAD" \
-              "$JIRA_BASE_URL/rest/api/3/issue/"
           fi
