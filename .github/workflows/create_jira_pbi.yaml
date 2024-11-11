@@ -4,11 +4,14 @@ on:
   pull_request:
     types:
       - opened
-# 123
+      - edited
+      - reopened
+
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,8 +33,10 @@ jobs:
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
           # Kiểm tra nếu PR tiêu đề có dạng "Bump <dependency> from ..."
-          if [[ "$PR_TITLE" =~ ^Bump[[:space:]]([a-zA-Z0-9-]+)[[:space:]]from[[:space:]] ]]; then
+          if [[ "$PR_TITLE" =~ ^Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+) ]]; then
             LIBRARY_NAME="${BASH_REMATCH[1]}"
+            OLD_VERSION="${BASH_REMATCH[2]}"
+            NEW_VERSION="${BASH_REMATCH[3]}"
             
             # Tìm kiếm Jira Issue đã tồn tại
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
@@ -39,6 +44,7 @@ jobs:
               "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~\"Bump $LIBRARY_NAME from\"" | jq -r '.issues[0]?.key')
 
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
+            echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
           fi
 
       - name: Create or Update Jira Issue
@@ -53,7 +59,8 @@ jobs:
           PR_URL="${{ github.event.pull_request.html_url }}"
           PR_BODY="${{ github.event.pull_request.body }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-
+          LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
+          
           # Tạo mô tả dưới dạng Atlassian Document Format (ADF)
           JIRA_DESCRIPTION=$(cat <<EOF
           {
@@ -115,9 +122,9 @@ jobs:
 
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             echo "Updating existing Jira Issue: $EXISTING_ISSUE_KEY"
-            
-            # Update existing issue summary and description
-            UPDATED_TITLE=$(echo "$PR_TITLE" | sed -E 's/from [0-9]+\.[0-9]+\.[0-9]+ to [0-9]+\.[0-9]+\.[0-9]+/to latest version/')
+
+            # Update existing issue summary to include latest version
+            UPDATED_TITLE="Bump $LIBRARY_NAME from ${OLD_VERSION} to ${NEW_VERSION}"
             
             curl -s -X PUT \
               -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
@@ -145,7 +152,7 @@ jobs:
             )
 
             # Tạo issue trong Jira
-            curl -X POST \
+            curl -s -X POST \
               -H "Content-Type: application/json" \
               -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               --data "$JIRA_PAYLOAD" \
