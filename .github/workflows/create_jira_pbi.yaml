@@ -66,7 +66,7 @@ jobs:
           NEW_VERSION="${{ env.NEW_VERSION }}"
           
           # Tạo mô tả dưới dạng Atlassian Document Format (ADF)
-          JIRA_DESCRIPTION=$(cat <<EOF
+          JIRA_DESCRIPTION=$(cat <<'EOF'
           {
             "type": "doc",
             "version": 1,
@@ -139,7 +139,7 @@ jobs:
             echo "Creating a new Jira Issue"
             
             # Payload JSON để tạo Jira Issue
-            JIRA_PAYLOAD=$(cat <<EOF
+            JIRA_PAYLOAD=$(cat <<'EOF'
             {
               "fields": {
                 "project": {
