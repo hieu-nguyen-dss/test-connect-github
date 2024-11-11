@@ -32,19 +32,21 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          # Kiểm tra nếu PR tiêu đề có dạng "Bump <dependency> from ..."
+          # Kiểm tra nếu PR tiêu đề có dạng "Bump <dependency> from <version> to <version>"
           if [[ "$PR_TITLE" =~ ^Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+) ]]; then
             LIBRARY_NAME="${BASH_REMATCH[1]}"
             OLD_VERSION="${BASH_REMATCH[2]}"
             NEW_VERSION="${BASH_REMATCH[3]}"
             
-            # Tìm kiếm Jira Issue đã tồn tại
+            # Tìm kiếm Jira Issue đã tồn tại với tiêu đề có chứa tên dependency
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
               "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~\"Bump $LIBRARY_NAME from\"" | jq -r '.issues[0]?.key')
 
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
             echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
+            echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
+            echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           fi
 
       - name: Create or Update Jira Issue
@@ -60,6 +62,8 @@ jobs:
           PR_BODY="${{ github.event.pull_request.body }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
+          OLD_VERSION="${{ env.OLD_VERSION }}"
+          NEW_VERSION="${{ env.NEW_VERSION }}"
           
           # Tạo mô tả dưới dạng Atlassian Document Format (ADF)
           JIRA_DESCRIPTION=$(cat <<EOF
@@ -123,7 +127,7 @@ jobs:
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             echo "Updating existing Jira Issue: $EXISTING_ISSUE_KEY"
 
-            # Update existing issue summary to include latest version
+            # Cập nhật tiêu đề issue với thông tin phiên bản mới
             UPDATED_TITLE="Bump $LIBRARY_NAME from ${OLD_VERSION} to ${NEW_VERSION}"
             
             curl -s -X PUT \
