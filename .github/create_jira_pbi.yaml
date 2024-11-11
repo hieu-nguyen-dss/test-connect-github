@@ -1,0 +1,42 @@
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - main  # Chỉ thực hiện với các PR vào nhánh develop
+
+name: Create Jira PBI for Dependabot PRs
+jobs:
+  create-jira-pbi:
+    runs-on: codebuild-eb-tokyo-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-7.0-small
+
+    steps:
+      - name: 1.Checkout
+        uses: actions/checkout@v4
+
+      - name: 2. Create Jira PBI
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_PROJECT_KEY: 'DEV'  # Thay thế bằng mã dự án Jira của bạn
+        run: |
+          # Extract information from PR
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_DESCRIPTION="${{ github.event.pull_request.body }}"
+          PBI_SUMMARY="$PR_TITLE"
+          PBI_DESCRIPTION="$PR_DESCRIPTION"
+
+          # Create the JSON payload for the Jira API
+          PAYLOAD=$(jq -n \
+            --arg summary "$PBI_SUMMARY" \
+            --arg description "$PBI_DESCRIPTION" \
+            --arg projectKey "$JIRA_PROJECT_KEY" \
+            '{fields: {summary: $summary, description: $description, project: { key: $projectKey }, issuetype: { name: "Story" }}}')
+
+          # Send request to Jira API to create the PBI
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -u $JIRA_USER_EMAIL:$JIRA_API_TOKEN \
+            -d "$PAYLOAD" \
+            "$JIRA_BASE_URL/rest/api/2/issue"
