@@ -80,7 +80,7 @@
       "start:prod": "yarn start:prodコマンドはcloud側に使うとprocessは上手くkillできないので、yarnコマンドの代わりに直接nodeコマンドを使うようにしてください。"
     },
     "dependencies": {
-      "newrelic": "^11.16.0"
+      "newrelic": "^12.6.1"
     },
     "jest": {
       "moduleFileExtensions": [
