@@ -18,7 +18,7 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_PROJECT_KEY: 'DEV'  # Thay thế bằng mã dự án Jira của bạn
+          JIRA_PROJECT_KEY: 'TCG'  # Thay thế bằng mã dự án Jira của bạn
         run: |
           # Extract information from PR
           PR_TITLE="${{ github.event.pull_request.title }}"
