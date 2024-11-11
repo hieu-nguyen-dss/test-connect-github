@@ -7,13 +7,41 @@ on:
 # 123
 jobs:
   create-jira-issue:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-eb-tokyo-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-7.0-small
     if: github.actor != 'github-actions[bot]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create Jira Issue
+      - name: Extract PR Information
+        id: pr_info
+        run: |
+          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
+          echo "PR_BODY=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
+          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
+
+      - name: Search for existing Jira PBI
+        id: search_issue
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+        run: |
+          # Kiểm tra nếu PR tiêu đề có dạng "Bump <dependency> from ..."
+          if [[ "$PR_TITLE" =~ ^Bump[[:space:]]([a-zA-Z0-9-]+)[[:space:]]from[[:space:]] ]]; then
+            LIBRARY_NAME="${BASH_REMATCH[1]}"
+            
+            # Tìm kiếm Jira Issue đã tồn tại
+            EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~\"Bump $LIBRARY_NAME from\"" | jq -r '.issues[0]?.key')
+
+            echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
+          fi
+
+      - name: Create or Update Jira Issue
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
@@ -26,29 +54,100 @@ jobs:
           PR_BODY="${{ github.event.pull_request.body }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
 
-          # Tạo nội dung mô tả cho Jira
-          JIRA_DESCRIPTION="### Pull Request Created by $PR_AUTHOR\n\n**Title**: $PR_TITLE\n\n**Description**:\n$PR_BODY\n\n**Link**: [PR #${{ github.event.number }}]($PR_URL)"
-
-          # Payload JSON để tạo Jira Issue
-          JIRA_PAYLOAD=$(cat <<EOF
+          # Tạo mô tả dưới dạng Atlassian Document Format (ADF)
+          JIRA_DESCRIPTION=$(cat <<EOF
           {
-            "fields": {
-              "project": {
-                "key": "$JIRA_PROJECT_KEY"
+            "type": "doc",
+            "version": 1,
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Pull Request Created by $PR_AUTHOR"
+                  }
+                ]
               },
-              "summary": "PR: $PR_TITLE",
-              "description": "$JIRA_DESCRIPTION",
-              "issuetype": {
-                "name": "Story"
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Title: $PR_TITLE"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Description: $PR_BODY"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Link: "
+                  },
+                  {
+                    "type": "text",
+                    "text": "$PR_URL",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "$PR_URL"
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
-            }
+            ]
           }
           EOF
           )
 
-          # Tạo issue trong Jira
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-            --data "$JIRA_PAYLOAD" \
-            "$JIRA_BASE_URL/rest/api/3/issue/"
+          if [ -n "$EXISTING_ISSUE_KEY" ]; then
+            echo "Updating existing Jira Issue: $EXISTING_ISSUE_KEY"
+            
+            # Update existing issue summary and description
+            UPDATED_TITLE=$(echo "$PR_TITLE" | sed -E 's/from [0-9]+\.[0-9]+\.[0-9]+ to [0-9]+\.[0-9]+\.[0-9]+/to latest version/')
+            
+            curl -s -X PUT \
+              -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "{\"fields\": {\"summary\": \"$UPDATED_TITLE\", \"description\": $JIRA_DESCRIPTION}}" \
+              "$JIRA_BASE_URL/rest/api/3/issue/$EXISTING_ISSUE_KEY"
+          else
+            echo "Creating a new Jira Issue"
+            
+            # Payload JSON để tạo Jira Issue
+            JIRA_PAYLOAD=$(cat <<EOF
+            {
+              "fields": {
+                "project": {
+                  "key": "$JIRA_PROJECT_KEY"
+                },
+                "summary": "$PR_TITLE",
+                "description": $JIRA_DESCRIPTION,
+                "issuetype": {
+                  "name": "Story"
+                }
+              }
+            }
+            EOF
+            )
+
+            # Tạo issue trong Jira
+            curl -X POST \
+              -H "Content-Type: application/json" \
+              -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+              --data "$JIRA_PAYLOAD" \
+              "$JIRA_BASE_URL/rest/api/3/issue/"
+          fi
