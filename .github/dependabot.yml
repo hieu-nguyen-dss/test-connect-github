@@ -6,10 +6,10 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "18:28"
+      time: "18:35"
       timezone: "Asia/Ho_Chi_Minh"
     allow:
       - dependency-type: "all"
     commit-message:
       prefix: "DEV-353: "
-      include-scope: true
+      include: "scope"
