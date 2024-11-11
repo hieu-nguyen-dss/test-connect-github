@@ -1,0 +1,54 @@
+name: Create Jira PBI for Pull Requests
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  create-jira-issue:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Jira Issue
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+        run: |
+          # Lấy thông tin từ Pull Request
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+
+          # Tạo nội dung mô tả cho Jira
+          JIRA_DESCRIPTION="### Pull Request Created by $PR_AUTHOR\n\n**Title**: $PR_TITLE\n\n**Description**:\n$PR_BODY\n\n**Link**: [PR #${{ github.event.number }}]($PR_URL)"
+
+          # Payload JSON để tạo Jira Issue
+          JIRA_PAYLOAD=$(cat <<EOF
+          {
+            "fields": {
+              "project": {
+                "key": "$JIRA_PROJECT_KEY"
+              },
+              "summary": "PR: $PR_TITLE",
+              "description": "$JIRA_DESCRIPTION",
+              "issuetype": {
+                "name": "Story"
+              }
+            }
+          }
+          EOF
+          )
+
+          # Tạo issue trong Jira
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+            --data "$JIRA_PAYLOAD" \
+            "$JIRA_BASE_URL/rest/api/3/issue/"
