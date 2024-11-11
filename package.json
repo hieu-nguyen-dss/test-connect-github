@@ -1,0 +1,116 @@
+{
+    "name": "sol-backend",
+    "version": "0.0.1",
+    "description": "",
+    "author": "",
+    "private": true,
+    "license": "UNLICENSED",
+    "engines": {
+      "npm": "please use yarn",
+      "node": "20.10.x",
+      "yarn": ">= 1.22.0"
+    },
+    "scripts": {
+      "prebuild": "rimraf dist",
+      "build": "nest build",
+      "format": "prettier --write \"**/*.{ts,json}\" --ignore-path .gitignore",
+      "dependencies:start": "docker-compose -f docker-compose.local.yaml up -d --build && yarn gcsbucket:local:generate",
+      "dependencies-inmem:start": "cat docker-compose.local.yaml | sed -e 's/-2//g' -e 's/-0//g' | yq e 'del(.volumes)' | yq e 'del(.[].[].volumes)' | yq '.services.postgresqls.tmpfs |= [\"/var/lib/postgresql/data\"]' | docker-compose -f - up -d && yarn gcsbucket:local:generate",
+      "dependencies:stop": "docker-compose -f docker-compose.local.yaml down --remove-orphans",
+      "start": "nest start",
+      "start:local": "yarn local yarn start",
+      "start:dev": "yarn start --watch",
+      "start:dev:local": "yarn local yarn start:dev",
+      "start:debug": "yarn start --debug --watch",
+      "start:debug:local": "yarn local yarn start:debug",
+      "start:prod": "node --min-semi-space-size=${MIN_SEMI_SPACE_SIZE} --max-semi-space-size=${MAX_SEMI_SPACE_SIZE} --initial-heap-size=${INITIAL_HEAP_SIZE} --max-heap-size=${MAX_HEAP_SIZE} --experimental-loader ./newrelic/newrelic-register.mjs dist/main",
+      "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+      "test": "jest --config ./test/jest-unit.json",
+      "test:local": "yarn local yarn test",
+      "test:watch": "yarn test --watch",
+      "test:cov": "yarn test --coverage",
+      "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+      "test:debug:local": "yarn local yarn test:debug",
+      "test:e2e": "jest --config ./test/jest-e2e.json",
+      "test:ep": "node --max-old-space-size=8192 node_modules/.bin/jest --config ./test/jest-endpoint.json --runInBand",
+      "test:ep:all": "/bin/bash test/tools/exec_all_endpoint_tests.sh container",
+      "test:generate-env-files": "/bin/bash test/tools/generate_env_files.sh",
+      "test:ep:local": "yarn local yarn test:ep",
+      "test:ep:local:all": "/bin/bash test/tools/exec_all_endpoint_tests.sh local",
+      "test:all:container": "docker-compose -f docker-compose.ci.yaml up --exit-code-from sol-backend-GITSHA",
+      "classgen": "ts-node ./class-generator/class-generator.ts",
+      "postclassgen": "eslint \"./src/api/**/*.{dto,entity}.ts\" --fix",
+      "db:clear": "yarn ts-node node_modules/@earthbrain/sol-db-common/dist/clear.js",
+      "db:master": "yarn ts-node node_modules/@earthbrain/sol-db-common/dist/master/seed.js",
+      "db:seed": "yarn ts-node node_modules/@earthbrain/sol-db-common/dist/seed/seed.js",
+      "db:test-seed": "yarn ts-node node_modules/@earthbrain/sol-db-common/dist/test-seed/seed.js",
+      "db:llviewer": "yarn ts-node node_modules/@earthbrain/sol-db-common/dist/llviewer-seed/seed.js",
+      "db:clear:local": "yarn local yarn db:clear",
+      "db:master:local": "yarn local yarn db:master",
+      "db:seed:local": "yarn local yarn db:seed",
+      "db:test-seed:local": "yarn local yarn db:test-seed",
+      "db:llviewer:local": "yarn local yarn db:llviewer",
+      "prisma:local": "yarn local yarn prisma",
+      "prisma:staging": "yarn staging yarn prisma",
+      "prisma:migration": "yarn migration yarn prisma",
+      "local": "dotenv -e .env.local -- dotenv -e authlete.env --",
+      "staging": "dotenv -e .env.staging --",
+      "migration": "dotenv -e .env.migration --",
+      "ci": "dotenv -e .env --",
+      "sendgrid:deploy": "yarn dotenv -e .env.sendgridDeploy yarn ts-node mailTemplate/mail-template-deploy.ts",
+      "gcsbucket:local:generate": "yarn local yarn ts-node test/common/storage/create-gcs-buckets.ts",
+      "restore:corporation": "yarn ts-node src/task/restore-corporation-ts-node.ts",
+      "restore:corporation:local": "yarn local yarn restore:corporation",
+      "restore:corporation:staging": "yarn staging yarn restore:corporation",
+      "translate": "sed -e 's/  :::x-description-i18n:/x-description-i18n:/g' -e 's/  :::x-example-i18n:/x-example-i18n:/g' src/common/openapi/openapi-tmp.yaml > src/common/openapi/openapi.yaml && yarn swagger-i18n-extension translate-all src/common/openapi/openapi.yaml",
+      "translate:watch": "chokidar \"src/common/openapi/openapi-tmp.yaml\" -c \"sed -e 's/  :::x-description-i18n:/x-description-i18n:/g' -e 's/  :::x-example-i18n:/x-example-i18n:/g' src/common/openapi/openapi-tmp.yaml > src/common/openapi/openapi.yaml && yarn swagger-i18n-extension translate-all src/common/openapi/openapi.yaml\"",
+      "preview-docs:eng": "redocly preview-docs src/common/openapi/openapi.eng.yaml --port 8081",
+      "preview-docs:jpn": "redocly preview-docs src/common/openapi/openapi.jpn.yaml",
+      "container:run": "docker build --platform=linux/amd64 -t sol-backend:latest . --build-arg NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN && docker run --rm -it --name sol-backend-manual -p 9000:9000 --network=sol-project_default sol-backend:latest",
+      "start:container": "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN yarn local yarn container:run /bin/sh -c 'yarn start'",
+      "start:dev:container": "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN yarn local yarn container:run /bin/sh -c 'yarn start:dev'",
+      "test:container": "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN yarn container:run /bin/sh -c 'yarn test'",
+      "test:ep:container": "NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN yarn container:run /bin/sh -c 'yarn test:ep'",
+      "lint-staged:lint": "eslint --fix",
+      "lint-staged:format": "prettier --write",
+      "pubsub:setup:deleteBucket:ci": "yarn ci yarn ts-node test/pubsub/setupPubSubDeleteBucket.ts",
+      "pubsub:setup:deleteBucket:local": "yarn local yarn ts-node test/pubsub/setupPubSubDeleteBucket.ts"
+    },
+    "@scripts-comments": {
+      "start:prod": "yarn start:prodコマンドはcloud側に使うとprocessは上手くkillできないので、yarnコマンドの代わりに直接nodeコマンドを使うようにしてください。"
+    },
+    "dependencies": {
+      "newrelic": "^11.16.0"
+    },
+    "jest": {
+      "moduleFileExtensions": [
+        "js",
+        "json",
+        "ts"
+      ],
+      "roots": [
+        "<rootDir>/src",
+        "<rootDir>/test"
+      ],
+      "testRegex": ".*\\.(endpoint-spec|spec)\\.ts$",
+      "transform": {
+        "^.+\\.ts$": "ts-jest"
+      },
+      "collectCoverageFrom": [
+        "**/*.(t|j)s"
+      ],
+      "coverageDirectory": "../coverage",
+      "testEnvironment": "node",
+      "moduleNameMapper": {
+        "^@\\/(.*)$": "<rootDir>/src/$1"
+      }
+    },
+    "prisma": {
+      "schema": "node_modules/@earthbrain/sol-db-common/dist/schema.prisma"
+    },
+    "lint-staged": {
+      "{src,test}/**/*.ts": "yarn lint-staged:lint",
+      "*.{ts,json}": "yarn lint-staged:format"
+    }
+  }
+  
