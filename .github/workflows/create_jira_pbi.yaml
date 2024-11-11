@@ -64,62 +64,62 @@ jobs:
           NEW_VERSION="${{ env.NEW_VERSION }}"
 
           JIRA_DESCRIPTION=$(cat <<EOF
-{
-  "type": "doc",
-  "version": 1,
-  "content": [
-    {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "Pull Request Created by $PR_AUTHOR"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "Title: $PR_TITLE"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "Description: $PR_BODY"
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "Link: "
-        },
-        {
-          "type": "text",
-          "text": "$PR_URL",
-          "marks": [
-            {
-              "type": "link",
-              "attrs": {
-                "href": "$PR_URL"
+          {
+            "type": "doc",
+            "version": 1,
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Pull Request Created by $PR_AUTHOR"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Title: $PR_TITLE"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Description: $PR_BODY"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Link: "
+                  },
+                  {
+                    "type": "text",
+                    "text": "$PR_URL",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "$PR_URL"
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-EOF
-)
+            ]
+          }
+          EOF
+          )
 
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             echo "Updating existing Jira Issue: $EXISTING_ISSUE_KEY"
@@ -133,20 +133,20 @@ EOF
           else
             echo "Creating a new Jira Issue"
             JIRA_PAYLOAD=$(cat <<EOF
-{
-  "fields": {
-    "project": {
-      "key": "$JIRA_PROJECT_KEY"
-    },
-    "summary": "$PR_TITLE",
-    "description": $JIRA_DESCRIPTION,
-    "issuetype": {
-      "name": "Story"
-    }
-  }
-}
-EOF
-)
+            {
+              "fields": {
+                "project": {
+                  "key": "$JIRA_PROJECT_KEY"
+                },
+                "summary": "$PR_TITLE",
+                "description": $JIRA_DESCRIPTION,
+                "issuetype": {
+                  "name": "Story"
+                }
+              }
+            }
+            EOF
+            )
 
             curl -s -X POST \
               -H "Content-Type: application/json" \
