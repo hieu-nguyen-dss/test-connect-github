@@ -86,7 +86,7 @@
         "snakecase-keys": "^5.4.2",
         "sshpk": "^1.17.0",
         "string-width": "4.2.3",
-        "swagger-ui-express": "^4.6.0",
+        "swagger-ui-express": "^5.0.1",
         "uuid": "^8.3.2",
         "webpack": "^5.76.3"
     },
