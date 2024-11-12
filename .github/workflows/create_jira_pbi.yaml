@@ -37,10 +37,12 @@ jobs:
             OLD_VERSION="${BASH_REMATCH[2]}"
             NEW_VERSION="${BASH_REMATCH[3]}"
 
+            JQL_QUERY=$(echo "project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\"" | jq -sRr @uri)
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~\"Bump $LIBRARY_NAME from\"" | jq -r '.issues[0]?.key')
+              "$JIRA_BASE_URL/rest/api/3/search?jql=$JQL_QUERY" | jq -r '.issues[0]?.key')
 
+            echo "EXISTING_ISSUE_KEY: $EXISTING_ISSUE_KEY"
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
             echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
             echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
