@@ -80,7 +80,7 @@
       "start:prod": "yarn start:prodコマンドはcloud側に使うとprocessは上手くkillできないので、yarnコマンドの代わりに直接nodeコマンドを使うようにしてください。"
     },
     "dependencies": {
-        "mongodb": "^6.3.0"
+        "mongodb": ">=6.3.0"
     },
     "jest": {
       "moduleFileExtensions": [
