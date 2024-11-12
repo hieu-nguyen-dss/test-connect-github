@@ -7,7 +7,7 @@ on:
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor == 'dependabot[bot]'
 
     steps:
       - name: Checkout code
