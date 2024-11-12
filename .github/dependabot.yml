@@ -5,11 +5,11 @@ updates:
     target-branch: "main"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "18:28"
+      day: "tuesday"
+      time: "10:05"
       timezone: "Asia/Ho_Chi_Minh"
     allow:
       - dependency-type: "all"
     commit-message:
       prefix: "DEV-353: "
-      include-scope: true
+      include: "scope"
