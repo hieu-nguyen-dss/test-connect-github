@@ -6,35 +6,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "tuesday"
-      time: "11:35"
-      timezone: "Asia/Ho_Chi_Minh"
-    allow:
-      - dependency-type: "all"
-    commit-message:
-      prefix: "DEV-353: "
-      include: "scope"
-
-  - package-ecosystem: "docker"
-    directory: "/"
-    target-branch: "develop"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "11:20"
-      timezone: "Asia/Ho_Chi_Minh"
-    allow:
-      - dependency-type: "all"
-    commit-message:
-      prefix: "DEV-353: "
-      include: "scope"
-
-  - package-ecosystem: "github-actions"
-    directory: "/.github/workflows"
-    target-branch: "develop"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "11:20"
+      time: "11:42"
       timezone: "Asia/Ho_Chi_Minh"
     allow:
       - dependency-type: "all"
