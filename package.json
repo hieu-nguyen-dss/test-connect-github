@@ -81,7 +81,7 @@
     },
     "dependencies": {
       "newrelic": "^11.16.0",
-      "passport": "^0.6.0"
+      "passport": "^0.7.0"
     },
     "jest": {
       "moduleFileExtensions": [
