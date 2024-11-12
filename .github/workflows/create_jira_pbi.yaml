@@ -4,6 +4,9 @@ on:
   pull_request:
     types:
       - opened
+      - edited
+      - reopened
+      - synchronize
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
