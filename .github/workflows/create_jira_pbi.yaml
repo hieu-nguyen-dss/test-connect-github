@@ -7,7 +7,7 @@ on:
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor == 'dependabot[bot]'
 
     steps:
       - name: Checkout code
@@ -18,7 +18,6 @@ jobs:
         run: |
           echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
-          echo "PR_BODY=${{ github.event.pull_request.body }}" >> $GITHUB_ENV
           echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
 
       - name: Search for existing Jira PBI
@@ -53,11 +52,11 @@ jobs:
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
           OLD_VERSION="${{ env.OLD_VERSION }}"
           NEW_VERSION="${{ env.NEW_VERSION }}"
+          EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
 
           JIRA_DESCRIPTION=$(cat <<EOF
           {
@@ -87,7 +86,7 @@ jobs:
                 "content": [
                   {
                     "type": "text",
-                    "text": "Description: $PR_BODY"
+                    "text": "Description: abc"
                   }
                 ]
               },
