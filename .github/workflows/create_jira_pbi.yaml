@@ -34,11 +34,11 @@ jobs:
             LIBRARY_NAME="${BASH_REMATCH[2]}"
             OLD_VERSION="${BASH_REMATCH[3]}"
             NEW_VERSION="${BASH_REMATCH[4]}"
-            OLD_ABC="${LIBRARY_NAME}"
-            JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"$LIBRARY_NAME from\""
+            echo "LIBRARY_NAME=${LIBRARY_NAME}""
+            JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\""
             ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
 
-            echo "ENCODED_JQL=$ENCODED_JQL"
+            echo "ENCODED_JQL=${ENCODED_JQL}"
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
               "$JIRA_BASE_URL/rest/api/3/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
