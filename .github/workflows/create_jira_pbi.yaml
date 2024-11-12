@@ -22,6 +22,7 @@ jobs:
           echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
           echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
+          echo "JQL: project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\"" >> $GITHUB_ENV
 
       - name: Search for existing Jira PBI
         id: search_issue
