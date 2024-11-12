@@ -31,7 +31,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{4}:[[:space:]]\(deps\):[[:space:]])?Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+          if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{4}:[[:space:]]\(deps\):[[:space:]])?Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)([[:space:]]in[[:space:]].+)?$ ]]; then
             LIBRARY_NAME="${BASH_REMATCH[1]}"
             OLD_VERSION="${BASH_REMATCH[2]}"
             NEW_VERSION="${BASH_REMATCH[3]}"
