@@ -5,8 +5,8 @@ updates:
     target-branch: "main"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "18:35"
+      day: "tuesday"
+      time: "10:05"
       timezone: "Asia/Ho_Chi_Minh"
     allow:
       - dependency-type: "all"
