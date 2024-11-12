@@ -35,8 +35,8 @@ jobs:
             OLD_VERSION="${BASH_REMATCH[3]}"
             NEW_VERSION="${BASH_REMATCH[4]}"
             echo "test 12345"
-            
-            JQL_QUERY=$(echo "project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\"" | jq -sRr @uri)
+
+            JQL_QUERY=$(echo "project=$JIRA_PROJECT_KEY AND summary~\"DEV-[0-9]+: (deps): Bump $LIBRARY_NAME from\" AND summary~\"to\"" | jq -sRr @uri)
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
               "$JIRA_BASE_URL/rest/api/3/search?jql=$JQL_QUERY" | jq -r '.issues[0]?.key // ""')
