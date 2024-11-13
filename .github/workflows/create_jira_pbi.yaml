@@ -28,6 +28,10 @@ jobs:
           OLD_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*from ([0-9]+\.[0-9]+\.[0-9]+) to.*/\1/')
           NEW_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*to ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
 
+          echo "LIBRARY_NAME=$LIBRARY_NAME"
+          echo "OLD_VERSION=$OLD_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION"
+        
           JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\""
           ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
 
