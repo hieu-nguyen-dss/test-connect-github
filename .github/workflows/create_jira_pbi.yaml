@@ -9,7 +9,7 @@ on:
       - synchronize
 jobs:
   create-jira-issue:
-    runs-on: codebuild-eb-tokyo-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-7.0-small
+    runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'
 
     steps:
