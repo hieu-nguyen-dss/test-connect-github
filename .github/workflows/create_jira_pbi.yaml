@@ -34,20 +34,28 @@ jobs:
             LIBRARY_NAME="${BASH_REMATCH[2]}"
             OLD_VERSION="${BASH_REMATCH[3]}"
             NEW_VERSION="${BASH_REMATCH[4]}"
-            echo "LIBRARY_NAME=${LIBRARY_NAME}"
+
+            echo "LIBRARY_NAME=$LIBRARY_NAME"
+            echo "OLD_VERSION=$OLD_VERSION"
+            echo "NEW_VERSION=$NEW_VERSION
+
             JQL_QUERY="project=$JIRA_PROJECT_KEY AND text~\"DEV-0000: Bump ws from\""
             ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
 
+            LIBRARY_LOG="${{ ENCODED_JQL }}"
             echo "ENCODED_JQL=${ENCODED_JQL}"
+
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/2/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
+              "$JIRA_BASE_URL/rest/api/3/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
 
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY"
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
             echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
             echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
             echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          else
+            echo "PR title does not match the expected pattern."
           fi
 
       - name: Create or Update Jira Issue
