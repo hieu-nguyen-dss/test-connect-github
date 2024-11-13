@@ -41,7 +41,7 @@ jobs:
             echo "ENCODED_JQL=${ENCODED_JQL}"
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/3/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
+              "$JIRA_BASE_URL/rest/api/2/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
 
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY"
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
