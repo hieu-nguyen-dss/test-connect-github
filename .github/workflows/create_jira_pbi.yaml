@@ -10,7 +10,7 @@ on:
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.actor != 'github-actions[bot]'
 
     steps:
       - name: Checkout code
@@ -21,7 +21,6 @@ jobs:
         run: |
           echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
           echo "PR_URL=${{ github.event.pull_request.html_url }}" >> $GITHUB_ENV
-          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
 
       - name: Search for existing Jira PBI
         id: search_issue
@@ -31,17 +30,24 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          if [[ "$PR_TITLE" =~ ^Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-            LIBRARY_NAME="${BASH_REMATCH[1]}"
-            OLD_VERSION="${BASH_REMATCH[2]}"
-            NEW_VERSION="${BASH_REMATCH[3]}"
+          if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{4}:[[:space:]]\(deps\):[[:space:]])?Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)([[:space:]]in[[:space:]].*)?$ ]]; then
+            LIBRARY_NAME="${BASH_REMATCH[2]}"
+            OLD_VERSION="${BASH_REMATCH[3]}"
+            NEW_VERSION="${BASH_REMATCH[4]}"
+            echo "12345"
+
+            JQL_QUERY="project=$JIRA_PROJECT_KEY AND text~\"DEV-0000: Bump ws from\""
+            ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
+
+            LIBRARY_LOG="${{ ENCODED_JQL }}"
+            echo "ENCODED_JQL=${ENCODED_JQL}"
 
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~\"Bump $LIBRARY_NAME from\"" | jq -r '.issues[0]?.key')
+              "$JIRA_BASE_URL/rest/api/3/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
 
+            echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY"
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
-            echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
             echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
             echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           fi
@@ -55,7 +61,6 @@ jobs:
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
-          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
           OLD_VERSION="${{ env.OLD_VERSION }}"
           NEW_VERSION="${{ env.NEW_VERSION }}"
@@ -71,7 +76,7 @@ jobs:
                 "content": [
                   {
                     "type": "text",
-                    "text": "Pull Request Created by $PR_AUTHOR"
+                    "text": "Updated $LIBRARY_NAME from $OLD_VERSION to $NEW_VERSION."
                   }
                 ]
               },
@@ -80,25 +85,12 @@ jobs:
                 "content": [
                   {
                     "type": "text",
-                    "text": "Title: $PR_TITLE"
-                  }
-                ]
-              },
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "type": "text",
-                    "text": "Description: abcde"
-                  }
-                ]
-              },
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "type": "text",
-                    "text": "Link: "
+                    "text": "Details: ",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
                   },
                   {
                     "type": "text",
