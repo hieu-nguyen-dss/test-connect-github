@@ -1,7 +1,7 @@
 name: Create Jira PBI for Pull Requests
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
     types:
@@ -26,6 +26,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
+          echo "123"
           # Sanitize inputs
           sanitize_input() {
             echo "$1" | jq -Rr @json
