@@ -34,9 +34,9 @@ jobs:
           echo "PR_TITLE: '$PR_TITLE'"
           if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{3,4}:?\ \(deps\):?\ )?Bump\ ([a-zA-Z0-9_/-]+)\ from\ ([0-9]+\.[0-9]+\.[0-9]+)\ to\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "Match found!"
-            LIBRARY_NAME="${BASH_REMATCH[1]}"
-            OLD_VERSION="${BASH_REMATCH[2]}"
-            NEW_VERSION="${BASH_REMATCH[3]}"
+            LIBRARY_NAME="${BASH_REMATCH[2]}"
+            OLD_VERSION="${BASH_REMATCH[3]}"
+            NEW_VERSION="${BASH_REMATCH[4]}"
             
             echo $LIBRARY_NAME
             echo $OLD_VERSION
