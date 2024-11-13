@@ -53,13 +53,14 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
+          echo "12"
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
           OLD_VERSION="${{ env.OLD_VERSION }}"
           NEW_VERSION="${{ env.NEW_VERSION }}"
           EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
-
+          echo "123"
           JIRA_DESCRIPTION=$(cat <<EOF
           {
             "type": "doc",
@@ -104,7 +105,8 @@ jobs:
           }
           EOF
           )
-
+          echo "1234"
+          echo "$JIRA_PROJECT_KEY"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             curl -s -X PUT \
               -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
@@ -112,6 +114,7 @@ jobs:
               --data "{\"fields\": {\"summary\": \"$PR_TITLE\", \"description\": $JIRA_DESCRIPTION}}" \
               "$JIRA_BASE_URL/rest/api/3/issue/$EXISTING_ISSUE_KEY"
           else
+            echo "12345"
             curl -s -X POST \
               -H "Content-Type: application/json" \
               -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
