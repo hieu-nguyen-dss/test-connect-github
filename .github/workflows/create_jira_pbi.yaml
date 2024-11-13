@@ -45,9 +45,15 @@ jobs:
             # log library name
             echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
 
+            JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\""
+            ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
+
+            echo "JQL_QUERY=$JQL_QUERY"
+            echo "ENCODED_JQL=$ENCODED_JQL"
+
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~"Bump $LIBRARY_NAME from"" | jq -r '.issues[0]?.key')
+              "$JIRA_BASE_URL/rest/api/3/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
 
             echo $EXISTING_ISSUE_KEY
             
