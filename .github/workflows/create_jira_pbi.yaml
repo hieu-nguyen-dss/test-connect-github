@@ -35,7 +35,7 @@ jobs:
             OLD_VERSION="${BASH_REMATCH[3]}"
             NEW_VERSION="${BASH_REMATCH[4]}"
             echo "LIBRARY_NAME=${LIBRARY_NAME}"
-            JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"Bump ws from\""
+            JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"DEV-0000: Bump ws from\""
             ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
 
             echo "ENCODED_JQL=${ENCODED_JQL}"
