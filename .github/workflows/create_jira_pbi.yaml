@@ -77,7 +77,7 @@ jobs:
                 "content": [
                   {
                     "type": "text",
-                    "text": "Update ${LIBRARY_NAME} library from ${OLD_VERSION} to ${NEW_VERSION}."
+                    "text": "Update $LIBRARY_NAME library from $OLD_VERSION to $NEW_VERSION."
                   }
                 ]
               },
@@ -95,12 +95,12 @@ jobs:
                   },
                   {
                     "type": "text",
-                    "text": "${PR_URL}",
+                    "text": "$PR_URL",
                     "marks": [
                       {
                         "type": "link",
                         "attrs": {
-                          "href": "${PR_URL}"
+                          "href": "$PR_URL"
                         }
                       }
                     ]
