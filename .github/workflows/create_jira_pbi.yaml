@@ -32,7 +32,7 @@ jobs:
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
           echo "PR_TITLE: '$PR_TITLE'"
-          if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{4}: \(deps\): )?Bump ([a-zA-Z0-9_/-]+) from ([0-9]+\.[0-9]+\.[0-9]+) to ([0-9]+\.[0-9]+\.[0-9]+)( in .*)?$ ]]; then
+          if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{4}:\ \(deps\):\ )?Bump\ ([a-zA-Z0-9_/-]+)\ from\ ([0-9]+\.[0-9]+\.[0-9]+)\ to\ ([0-9]+\.[0-9]+\.[0-9]+)(\ in\ .*)?$ ]]; then
             echo "Match found!"
             LIBRARY_NAME="${BASH_REMATCH[2]}"
             OLD_VERSION="${BASH_REMATCH[3]}"
