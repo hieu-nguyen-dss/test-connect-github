@@ -24,27 +24,29 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          echo "PR_TITLE=$PR_TITLE"
-          LIBRARY_NAME=$(echo "$PR_TITLE" | sed -E 's/.*Bump[[:space:]]+([a-zA-Z0-9_/-]+)[[:space:]]+from.*/\1/')
-          OLD_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*from[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]+to.*/\1/')
-          NEW_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*to[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          # Sanitize inputs
+          sanitize_input() {
+            echo "$1" | jq -Rr @json
+          }
 
-          echo "LIBRARY_NAME=$LIBRARY_NAME"
-          echo "OLD_VERSION=$OLD_VERSION"
-          echo "NEW_VERSION=$NEW_VERSION"
-        
-          JQL_QUERY="project=$JIRA_PROJECT_KEY AND summary~\"Bump $LIBRARY_NAME from\""
-          ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
+          PR_TITLE=$(sanitize_input "${{ github.event.pull_request.title }}")
+          LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([a-zA-Z0-9_/-]+) from.*/\1/')
+          OLD_VERSION=$(echo "${PR_TITLE}" | sed -E 's/.*from ([0-9]+\.[0-9]+\.[0-9]+) to.*/\1/')
+          NEW_VERSION=$(echo "${PR_TITLE}" | sed -E 's/.*to ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
 
-          EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+          JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"Bump ${LIBRARY_NAME} from\""
+          ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
+
+          EXISTING_ISSUE_KEY=$(curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            "$JIRA_BASE_URL/rest/api/3/search?jql=$ENCODED_JQL" | jq -r '.issues[0]?.key // ""')
+            "${JIRA_BASE_URL}/rest/api/3/search?jql=${ENCODED_JQL}" | jq -r '.issues[0]?.key // ""')
 
-          echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
-          echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
-          echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          {
+            echo "EXISTING_ISSUE_KEY=${EXISTING_ISSUE_KEY}"
+            echo "LIBRARY_NAME=${LIBRARY_NAME}"
+            echo "OLD_VERSION=${OLD_VERSION}"
+            echo "NEW_VERSION=${NEW_VERSION}"
+          } >> "${GITHUB_ENV}"
 
       - name: Create or Update Jira Issue
         env:
@@ -53,13 +55,18 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
+          # Sanitize inputs
+          sanitize_input() {
+            echo "$1" | jq -Rr @json
+          }
+
+          PR_TITLE=$(sanitize_input "${{ github.event.pull_request.title }}")
           PR_URL="${{ github.event.pull_request.html_url }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
           OLD_VERSION="${{ env.OLD_VERSION }}"
           NEW_VERSION="${{ env.NEW_VERSION }}"
           EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
-          
+
           JIRA_DESCRIPTION=$(cat <<EOF
           {
             "type": "doc",
@@ -70,7 +77,7 @@ jobs:
                 "content": [
                   {
                     "type": "text",
-                    "text": "Update $LIBRARY_NAME library from $OLD_VERSION to $NEW_VERSION."
+                    "text": "Update ${LIBRARY_NAME} library from ${OLD_VERSION} to ${NEW_VERSION}."
                   }
                 ]
               },
@@ -88,12 +95,12 @@ jobs:
                   },
                   {
                     "type": "text",
-                    "text": "$PR_URL",
+                    "text": "${PR_URL}",
                     "marks": [
                       {
                         "type": "link",
                         "attrs": {
-                          "href": "$PR_URL"
+                          "href": "${PR_URL}"
                         }
                       }
                     ]
@@ -106,25 +113,25 @@ jobs:
           )
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             curl -s -X PUT \
-              -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+              -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data "{\"fields\": {\"summary\": \"$PR_TITLE\", \"description\": $JIRA_DESCRIPTION}}" \
-              "$JIRA_BASE_URL/rest/api/3/issue/$EXISTING_ISSUE_KEY"
+              --data "{\"fields\": {\"summary\": \"${PR_TITLE}\", \"description\": ${JIRA_DESCRIPTION}}}" \
+              "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
           else
             curl -s -X POST \
               -H "Content-Type: application/json" \
-              -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+              -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
               --data '{
                 "fields": {
                   "project": {
-                    "key": "'"$JIRA_PROJECT_KEY"'"
+                    "key": "'"${JIRA_PROJECT_KEY}"'"
                   },
-                  "summary": "'"$PR_TITLE"'",
-                  "description": '"$JIRA_DESCRIPTION"',
+                  "summary": "'"${PR_TITLE}"'",
+                  "description": '"${JIRA_DESCRIPTION}"',
                   "issuetype": {
                     "name": "Story"
                   }
                 }
               }' \
-              "$JIRA_BASE_URL/rest/api/3/issue/"
+              "${JIRA_BASE_URL}/rest/api/3/issue/"
           fi
