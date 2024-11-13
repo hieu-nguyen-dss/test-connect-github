@@ -34,7 +34,7 @@ jobs:
           echo "test1235"
           EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
             -H "Content-Type: application/json" \
-            "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~"DEV-353: (deps): Bump slackapi/slack-github-action from"" | jq -r '.issues[0]?.key')
+            "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~"Bump slackapi/slack-github-action from"" | jq -r '.issues[0]?.key')
 
 
       - name: Create or Update Jira Issue
