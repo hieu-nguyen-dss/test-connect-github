@@ -34,7 +34,7 @@ jobs:
             LIBRARY_NAME="${BASH_REMATCH[2]}"
             OLD_VERSION="${BASH_REMATCH[3]}"
             NEW_VERSION="${BASH_REMATCH[4]}"
-
+            echo "12345"
             echo "LIBRARY_NAME=$LIBRARY_NAME"
             echo "OLD_VERSION=$OLD_VERSION"
             echo "NEW_VERSION=$NEW_VERSION
@@ -51,11 +51,8 @@ jobs:
 
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY"
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
-            echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
             echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
             echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          else
-            echo "PR title does not match the expected pattern."
           fi
 
       - name: Create or Update Jira Issue
