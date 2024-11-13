@@ -111,12 +111,15 @@ jobs:
           }
           EOF
           )
+          echo "123242"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
+            echo "123"
             curl -s -X PUT \
               -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
               --data "{\"fields\": {\"summary\": \"${PR_TITLE}\", \"description\": ${JIRA_DESCRIPTION}}}" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
+            echo "222"
           else
             curl -s -X POST \
               -H "Content-Type: application/json" \
