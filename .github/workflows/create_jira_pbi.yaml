@@ -38,7 +38,7 @@ jobs:
 
             EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~\"Bump $LIBRARY_NAME from\"" | jq -r '.issues[0]?.key')
+              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~"DEV-353: (deps): Bump slackapi/slack-github-action from"" | jq -r '.issues[0]?.key')
 
             echo "EXISTING_ISSUE_KEY=$EXISTING_ISSUE_KEY" >> $GITHUB_ENV
             echo "LIBRARY_NAME=$LIBRARY_NAME" >> $GITHUB_ENV
