@@ -31,13 +31,11 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          if [[ "$PR_TITLE" =~ ^(DEV-[0-9]{4}:[[:space:]]\(deps\):[[:space:]])?Bump[[:space:]]([a-zA-Z0-9_-]+)[[:space:]]from[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]to[[:space:]]([0-9]+\.[0-9]+\.[0-9]+)([[:space:]]in[[:space:]].*)?$ ]]; then
-            echo "test1235"
-            EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-              -H "Content-Type: application/json" \
-              "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~"DEV-353: (deps): Bump slackapi/slack-github-action from"" | jq -r '.issues[0]?.key')
+          echo "test1235"
+          EXISTING_ISSUE_KEY=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            "$JIRA_BASE_URL/rest/api/3/search?jql=project=$JIRA_PROJECT_KEY+AND+summary~"DEV-353: (deps): Bump slackapi/slack-github-action from"" | jq -r '.issues[0]?.key')
 
-          fi
 
       - name: Create or Update Jira Issue
         env:
