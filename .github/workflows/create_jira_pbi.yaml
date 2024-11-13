@@ -24,9 +24,9 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          LIBRARY_NAME=$(echo "$PR_TITLE" | sed -E 's/.*Bump ([a-zA-Z0-9_/-]+) from.*/\1/')
-          OLD_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*from ([0-9]+\.[0-9]+\.[0-9]+) to.*/\1/')
-          NEW_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*to ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          LIBRARY_NAME=$(echo "$PR_TITLE" | sed -E 's/.*Bump[[:space:]]+([a-zA-Z0-9_/-]+)[[:space:]]+from.*/\1/')
+          OLD_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*from[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]+to.*/\1/')
+          NEW_VERSION=$(echo "$PR_TITLE" | sed -E 's/.*to[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
 
           echo "LIBRARY_NAME=$LIBRARY_NAME"
           echo "OLD_VERSION=$OLD_VERSION"
