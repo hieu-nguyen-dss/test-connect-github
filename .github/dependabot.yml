@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "wednesday"
-      time: "14:35"
+      time: "14:55"
       timezone: "Asia/Ho_Chi_Minh"
     allow:
       - dependency-type: "all"
