@@ -102,11 +102,12 @@ jobs:
           }
           EOF
           )
+          JIRA_ACCEPTANCE_CRITERIA="Define the criteria for acceptance here"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             curl -s -X PUT \
               -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data "{\"fields\": {\"summary\": \"${PR_TITLE}\", \"description\": ${JIRA_DESCRIPTION}}}" \
+              --data "{\"fields\": {\"summary\": \"${PR_TITLE}\", \"description\": ${JIRA_DESCRIPTION}, \"customfield_10047\": \"${JIRA_ACCEPTANCE_CRITERIA}\"}}" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
           else
             curl -s -X POST \
@@ -121,7 +122,8 @@ jobs:
                   "description": '"${JIRA_DESCRIPTION}"',
                   "issuetype": {
                     "name": "Story"
-                  }
+                  },
+                  "customfield_10047": "'"${JIRA_ACCEPTANCE_CRITERIA}"'"
                 }
               }' \
               "${JIRA_BASE_URL}/rest/api/3/issue/"
