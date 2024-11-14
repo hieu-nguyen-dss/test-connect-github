@@ -31,9 +31,18 @@ jobs:
           JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"[dependency update]: ${LIBRARY_NAME}\""
           ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
 
-          EXISTING_ISSUE_KEY=$(curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+          # APIコールのエラー処理
+          response=$(curl -s -w "%{http_code}" -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            "${JIRA_BASE_URL}/rest/api/3/search?jql=${ENCODED_JQL}" | jq -r '.issues[0]?.key // ""')
+            "${JIRA_BASE_URL}/rest/api/3/search?jql=${ENCODED_JQL}")
+          http_code=${response: -3}
+          body=${response:0:${#response}-3}
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Jira API call failed with status $http_code: $body"
+            exit 1
+          fi
+
+          EXISTING_ISSUE_KEY=$(echo "$body" | jq -r '.issues[0]?.key // ""')
 
           {
             echo "EXISTING_ISSUE_KEY=${EXISTING_ISSUE_KEY}"
@@ -47,102 +56,119 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
+          # ヘルパー関数
+          call_jira_api() {
+            local method="$1"
+            local endpoint="$2"
+            local data="$3"
+            
+            response=$(curl -s -w "%{http_code}" \
+              -X "$method" \
+              -H "Content-Type: application/json" \
+              -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+              --data "$data" \
+              "${JIRA_BASE_URL}${endpoint}")
+            http_code=${response: -3}
+            body=${response:0:${#response}-3}
+            if [ "$http_code" -ge 400 ]; then
+              echo "::error::Jira API call failed with status $http_code: $body"
+              exit 1
+            fi
+            echo "$body"
+          }
+
+          # JSONエスケープ
+          escape_json() {
+            jq -n --arg text "$1" '$text'
+          }
+
           PR_URL="${{ github.event.pull_request.html_url }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
           EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
 
-          JIRA_DESCRIPTION=$(cat <<EOF
-          {
-            "type": "doc",
-            "version": 1,
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "type": "text",
-                    "text": "Update ${LIBRARY_NAME} library."
-                  }
-                ]
-              },
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "type": "text",
-                    "text": "Details: ",
-                    "marks": [
-                      {
-                        "type": "strong"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "text",
-                    "text": "${PR_URL}",
-                    "marks": [
-                      {
-                        "type": "link",
-                        "attrs": {
-                          "href": "${PR_URL}"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-          EOF
-          )
-          echo "321"
-          JIRA_ACCEPTANCE_CRITERIA=$(cat <<EOF
-          {
-            "type": "doc",
-            "version": 1,
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "type": "text",
-                    "text": "Update abc"
-                  }
-                ]
-              }
-            ]
-          }
-          EOF
-          )
-          echo "12345"
-          echo "JIRA_DESCRIPTION: ${JIRA_DESCRIPTION}"
-          echo "JIRA_ACCEPTANCE_CRITERIA: ${JIRA_ACCEPTANCE_CRITERIA}"
+          description_text="Update ${LIBRARY_NAME} library."
+          JIRA_DESCRIPTION=$(jq -n \
+            --arg desc "$description_text" \
+            --arg url "$PR_URL" \
+            '{
+             "type": "doc",
+             "version": 1,
+             "content": [
+               {
+                 "type": "paragraph",
+                 "content": [
+                   {
+                     "type": "text",
+                     "text": $desc
+                   }
+                 ]
+               },
+               {
+                 "type": "paragraph",
+                 "content": [
+                   {
+                     "type": "text",
+                     "text": "Details: ",
+                     "marks": [{ "type": "strong" }]
+                   },
+                   {
+                     "type": "text",
+                     "text": $url,
+                     "marks": [
+                       {
+                         "type": "link",
+                         "attrs": { "href": $url }
+                       }
+                     ]
+                   }
+                 ]
+               }
+             ]
+            }')
+
+          JIRA_ACCEPTANCE_CRITERIA=$(jq -n \
+            '{
+             "type": "doc",
+             "version": 1,
+             "content": [
+               {
+                 "type": "paragraph",
+                 "content": [
+                   {
+                     "type": "text",
+                     "text": "update abc library"
+                   }
+                 ]
+               }
+             ]
+            }')
 
           PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
-            curl -s -X PUT \
-              -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              --data "{\"fields\": {\"summary\": \"${PR_SUMMARY}\", \"description\": ${JIRA_DESCRIPTION}, \"customfield_10047\": \"${JIRA_ACCEPTANCE_CRITERIA}\"}}" \
-              "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
+            update_data=$(jq -n \
+              --arg summary "$PR_SUMMARY" \
+              --argjson desc "$JIRA_DESCRIPTION" \
+              --argjson acc "$JIRA_ACCEPTANCE_CRITERIA" \
+              '{"fields": {"summary": $summary, "description": $desc, "customfield_10047": $acc}}')
+            call_jira_api "PUT" "/rest/api/3/issue/${EXISTING_ISSUE_KEY}" "$update_data"
           else
-            echo "2222"
-            curl -s -X POST \
-              -H "Content-Type: application/json" \
-              -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
-              --data "{
-                \"fields\": {
-                  \"project\": {
-                    \"key\": \"${JIRA_PROJECT_KEY}\"
+            create_data=$(jq -n \
+              --arg key "$JIRA_PROJECT_KEY" \
+              --arg summary "$PR_SUMMARY" \
+              --argjson desc "$JIRA_DESCRIPTION" \
+              --argjson acc "$JIRA_ACCEPTANCE_CRITERIA" \
+              '{
+                "fields": {
+                  "project": {
+                    "key": $key
                   },
-                  \"summary\": \"${PR_SUMMARY}\",
-                  \"description\": ${JIRA_DESCRIPTION},
-                  \"issuetype\": {
-                    \"name\": \"Story\"
+                  "summary": $summary,
+                  "description": $desc,
+                  "issuetype": {
+                    "name": "Story"
                   },
-                  \"customfield_10047\": ${JIRA_ACCEPTANCE_CRITERIA}
+                  "customfield_10047": $acc
                 }
-              }" \
-              "${JIRA_BASE_URL}/rest/api/3/issue/"
+              }')
+            call_jira_api "POST" "/rest/api/3/issue/" "$create_data"
           fi
