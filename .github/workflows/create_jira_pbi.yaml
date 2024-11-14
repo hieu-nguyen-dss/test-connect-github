@@ -24,14 +24,8 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          echo "123"
-          # Sanitize inputs
-          sanitize_input() {
-            echo "$1" | jq -Rr @json
-          }
-
-          PR_TITLE=$(sanitize_input "${{ github.event.pull_request.title }}")
-          LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([a-zA-Z0-9_/-]+) from.*/\1/')
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+) from.*/\1/')
           OLD_VERSION=$(echo "${PR_TITLE}" | sed -E 's/.*from ([0-9]+\.[0-9]+\.[0-9]+) to.*/\1/')
           NEW_VERSION=$(echo "${PR_TITLE}" | sed -E 's/.*to ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
 
@@ -107,17 +101,12 @@ jobs:
           }
           EOF
           )
-          echo "123242"
-          CLEANED_TITLE=$(echo "$PR_TITLE" | sed -E 's/^[^:]+: \([^)]*\): //')
-
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
-            echo "123"
             curl -s -X PUT \
               -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data "{\"fields\": {\"summary\": \"${CLEANED_TITLE}\", \"description\": ${JIRA_DESCRIPTION}}}" \
+              --data "{\"fields\": {\"summary\": \"${PR_TITLE}\", \"description\": ${JIRA_DESCRIPTION}}}" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
-            echo "222"
           else
             curl -s -X POST \
               -H "Content-Type: application/json" \
@@ -127,7 +116,7 @@ jobs:
                   "project": {
                     "key": "'"${JIRA_PROJECT_KEY}"'"
                   },
-                  "summary": "'"${CLEANED_TITLE}"'",
+                  "summary": "'"${PR_TITLE}"'",
                   "description": '"${JIRA_DESCRIPTION}"',
                   "issuetype": {
                     "name": "Story"
