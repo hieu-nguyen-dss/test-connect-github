@@ -131,7 +131,9 @@ jobs:
              ]
             }')
 
+          acceptance_criteria_text="Update ${LIBRARY_NAME} library to the latest version, ensure all features work as expected, verify compatibility with other components."
           JIRA_ACCEPTANCE_CRITERIA=$(jq -n \
+            --arg acc "$acceptance_criteria_text" \
             '{
              "type": "doc",
              "version": 1,
@@ -141,7 +143,7 @@ jobs:
                  "content": [
                    {
                      "type": "text",
-                     "text": "update abc library"
+                     "text": $acc
                    }
                  ]
                }
