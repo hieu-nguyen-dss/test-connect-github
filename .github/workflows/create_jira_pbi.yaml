@@ -116,6 +116,9 @@ jobs:
           EOF
           )
           echo "12345"
+          echo "JIRA_DESCRIPTION: ${JIRA_DESCRIPTION}"
+          echo "JIRA_ACCEPTANCE_CRITERIA: ${JIRA_ACCEPTANCE_CRITERIA}"
+
           PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             curl -s -X PUT \
@@ -128,18 +131,18 @@ jobs:
             curl -s -X POST \
               -H "Content-Type: application/json" \
               -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
-              --data '{
-                "fields": {
-                  "project": {
-                    "key": "'"${JIRA_PROJECT_KEY}"'"
+              --data "{
+                \"fields\": {
+                  \"project\": {
+                    \"key\": \"${JIRA_PROJECT_KEY}\"
                   },
-                  "summary": "'"${PR_SUMMARY}"'",
-                  "description": '"${JIRA_DESCRIPTION}"',
-                  "issuetype": {
-                    "name": "Story"
+                  \"summary\": \"${PR_SUMMARY}\",
+                  \"description\": ${JIRA_DESCRIPTION},
+                  \"issuetype\": {
+                    \"name\": \"Story\"
                   },
-                  "customfield_10047": "'"${JIRA_ACCEPTANCE_CRITERIA}"'"
+                  \"customfield_10047\": ${JIRA_ACCEPTANCE_CRITERIA}
                 }
-              }' \
+              }" \
               "${JIRA_BASE_URL}/rest/api/3/issue/"
           fi
