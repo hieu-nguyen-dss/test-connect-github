@@ -96,6 +96,7 @@ jobs:
           }
           EOF
           )
+          echo "321"
           JIRA_ACCEPTANCE_CRITERIA=$(cat <<EOF
           {
             "type": "doc",
@@ -114,6 +115,7 @@ jobs:
           }
           EOF
           )
+          echo "12345"
           PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             curl -s -X PUT \
@@ -122,6 +124,7 @@ jobs:
               --data "{\"fields\": {\"summary\": \"${PR_SUMMARY}\", \"description\": ${JIRA_DESCRIPTION}, \"customfield_10047\": \"${JIRA_ACCEPTANCE_CRITERIA}\"}}" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
           else
+            echo "2222"
             curl -s -X POST \
               -H "Content-Type: application/json" \
               -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
