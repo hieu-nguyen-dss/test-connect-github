@@ -24,11 +24,11 @@ jobs:
       - name: Search for existing Jira PBI
         id: search_issue
         env:
+          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ vars.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          JIRA_BASE_URL="${{ secrets.JIRA_BASE_URL }}"
-          JIRA_EMAIL="${{ secrets.JIRA_EMAIL }}"
           echo "JIRA_BASE_URL=${JIRA_BASE_URL}"
           PR_TITLE="${{ github.event.pull_request.title }}"
           LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+) from.*/\1/')
@@ -56,9 +56,15 @@ jobs:
 
       - name: Create or Update Jira Issue
         env:
+          JIRA_BASE_URL="${{ secrets.JIRA_BASE_URL }}"
+          JIRA_EMAIL="${{ secrets.JIRA_EMAIL }}"
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
+          EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
+
           # Helper functions
           call_jira_api() {
             local method="$1"
@@ -84,11 +90,6 @@ jobs:
           escape_json() {
             jq -n --arg text "$1" '$text'
           }
-          JIRA_BASE_URL="${{ secrets.JIRA_BASE_URL }}"
-          JIRA_EMAIL="${{ secrets.JIRA_EMAIL }}"
-          PR_URL="${{ github.event.pull_request.html_url }}"
-          LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
-          EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
 
           description_text="Update ${LIBRARY_NAME} library."
           JIRA_DESCRIPTION=$(jq -n \
