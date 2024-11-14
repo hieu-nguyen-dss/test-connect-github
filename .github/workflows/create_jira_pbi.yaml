@@ -27,10 +27,8 @@ jobs:
           echo "JIRA_BASE_URL=${JIRA_BASE_URL}"
           PR_TITLE="${{ github.event.pull_request.title }}"
           LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+) from.*/\1/')
-          OLD_VERSION=$(echo "${PR_TITLE}" | sed -E 's/.*from ([0-9]+\.[0-9]+\.[0-9]+) to.*/\1/')
-          NEW_VERSION=$(echo "${PR_TITLE}" | sed -E 's/.*to ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
 
-          JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"Bump ${LIBRARY_NAME} from\""
+          JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"[dependency update]: ${LIBRARY_NAME}\""
           ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
 
           EXISTING_ISSUE_KEY=$(curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
@@ -40,8 +38,6 @@ jobs:
           {
             echo "EXISTING_ISSUE_KEY=${EXISTING_ISSUE_KEY}"
             echo "LIBRARY_NAME=${LIBRARY_NAME}"
-            echo "OLD_VERSION=${OLD_VERSION}"
-            echo "NEW_VERSION=${NEW_VERSION}"
           } >> "${GITHUB_ENV}"
 
       - name: Create or Update Jira Issue
@@ -54,8 +50,6 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
-          OLD_VERSION="${{ env.OLD_VERSION }}"
-          NEW_VERSION="${{ env.NEW_VERSION }}"
           EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
 
           JIRA_DESCRIPTION=$(cat <<EOF
@@ -68,7 +62,7 @@ jobs:
                 "content": [
                   {
                     "type": "text",
-                    "text": "Update ${LIBRARY_NAME} library from ${OLD_VERSION} to ${NEW_VERSION}."
+                    "text": "Update ${LIBRARY_NAME} library."
                   }
                 ]
               },
@@ -102,12 +96,30 @@ jobs:
           }
           EOF
           )
-          JIRA_ACCEPTANCE_CRITERIA="Define the criteria for acceptance here"
+          JIRA_ACCEPTANCE_CRITERIA=$(cat <<EOF
+          {
+            "type": "doc",
+            "version": 1,
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Update abc"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+          PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
             curl -s -X PUT \
               -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data "{\"fields\": {\"summary\": \"${PR_TITLE}\", \"description\": ${JIRA_DESCRIPTION}, \"customfield_10047\": \"${JIRA_ACCEPTANCE_CRITERIA}\"}}" \
+              --data "{\"fields\": {\"summary\": \"${PR_SUMMARY}\", \"description\": ${JIRA_DESCRIPTION}, \"customfield_10047\": \"${JIRA_ACCEPTANCE_CRITERIA}\"}}" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${EXISTING_ISSUE_KEY}"
           else
             curl -s -X POST \
@@ -118,7 +130,7 @@ jobs:
                   "project": {
                     "key": "'"${JIRA_PROJECT_KEY}"'"
                   },
-                  "summary": "'"${PR_TITLE}"'",
+                  "summary": "'"${PR_SUMMARY}"'",
                   "description": '"${JIRA_DESCRIPTION}"',
                   "issuetype": {
                     "name": "Story"
