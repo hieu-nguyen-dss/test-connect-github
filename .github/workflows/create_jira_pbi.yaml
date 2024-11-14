@@ -1,7 +1,7 @@
 name: Create Jira PBI for Pull Requests
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - edited
@@ -9,6 +9,9 @@ on:
       - synchronize
     branches:
       - main
+permissions:
+  contents: read
+  pull-requests: read
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
@@ -24,7 +27,6 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          echo "JIRA_API"
           JIRA_BASE_URL="${{ secrets.JIRA_BASE_URL }}"
           JIRA_EMAIL="${{ secrets.JIRA_EMAIL }}"
           echo "JIRA_BASE_URL=${JIRA_BASE_URL}"
