@@ -1,12 +1,17 @@
 name: Create Jira PBI for Pull Requests
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - edited
       - reopened
       - synchronize
+    branches:
+      - main
+permissions:
+  contents: read
+  pull-requests: read
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
