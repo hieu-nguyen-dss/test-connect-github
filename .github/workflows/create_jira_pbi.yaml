@@ -31,7 +31,8 @@ jobs:
 
       - name: Setup JIRA API Script
         run: |
-          cp ./jira_api.sh /tmp/
+          ls -la
+          cp jira_api.sh /tmp/
           chmod +x /tmp/jira_api.sh
 
       - name: Search for existing Jira PBI
