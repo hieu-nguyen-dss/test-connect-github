@@ -166,6 +166,7 @@ jobs:
               --arg summary "$PR_SUMMARY" \
               --argjson desc "$JIRA_DESCRIPTION" \
               --argjson acc "$JIRA_ACCEPTANCE_CRITERIA" \
+              --arg field "$JIRA_ACCEPTANCE_CRITERIA_FIELD" \
               '{
                 "fields": {
                   "project": {
@@ -176,7 +177,7 @@ jobs:
                   "issuetype": {
                     "name": "Story"
                   }
-                } | .fields[$field] = $acc
-              }')
+                }
+              } | .fields[$field] = $acc')
             call_jira_api "POST" "/rest/api/3/issue/" "$create_data"
           fi
