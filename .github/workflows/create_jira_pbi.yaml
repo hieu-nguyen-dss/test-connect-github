@@ -176,8 +176,9 @@ jobs:
                   "description": $desc,
                   "issuetype": {
                     "name": "Story"
-                  }
+                  },
+                  ($field): $acc
                 }
-              } | .fields[$field] = $acc')
+              }')
             call_jira_api "POST" "/rest/api/3/issue/" "$create_data"
           fi
