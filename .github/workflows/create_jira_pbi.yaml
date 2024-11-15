@@ -31,9 +31,9 @@ jobs:
 
       - name: Setup JIRA API Script
         run: |
-          cp .github/workflows/src/jira_api.sh /tmp/
+          # Copy jira_api.sh script to the runner environment
+          cp ./jira_api.sh /tmp/
           chmod +x /tmp/jira_api.sh
-          ls -a
 
       - name: Search for existing Jira PBI
         run: |
@@ -42,8 +42,26 @@ jobs:
 
           JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"[dependency update]: ${LIBRARY_NAME}\""
           ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
+    env:
+      JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
+      JIRA_EMAIL: ${{ vars.JIRA_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      JIRA_ACCEPTANCE_CRITERIA_FIELD: ${{ vars.JIRA_ACCEPTANCE_CRITERIA_FIELD }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-          # APIコールのエラー処理
+      - name: Search for existing Jira PBI
+        id: search_issue
+        run: |
+          LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+) from.*/\1/')
+          JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"[dependency update]: ${LIBRARY_NAME}\""
+          ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
+
+          # Handling errors in API calls
           response=$(curl -s -w "%{http_code}" -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
             -H "Content-Type: application/json" \
             "${JIRA_BASE_URL}/rest/api/3/search?jql=${ENCODED_JQL}")
@@ -63,15 +81,33 @@ jobs:
 
       - name: Create or Update Jira Issue
         run: |
-          LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
-          EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
+          # Helper function to call Jira API with given method, endpoint, and data
+          call_jira_api() {
+            local method="$1"
+            local endpoint="$2"
+            local data="$3"
 
-          source /tmp/jira_api.sh
+            response=$(curl -s -w "%{http_code}" \
+              -X "$method" \
+              -H "Content-Type: application/json" \
+              -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+              --data "$data" \
+              "${JIRA_BASE_URL}${endpoint}")
+            http_code=${response: -3}
+            body=${response:0:${#response}-3}
+            if [ "$http_code" -ge 400 ]; then
+              echo "::error::Jira API call failed with status $http_code: $body"
+              exit 1
+            fi
+            echo "$body"
+          }
 
           # JSON escaping
           escape_json() {
             jq -n --arg text "$1" '$text'
           }
+          LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
+          EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
 
           description_text="Update ${LIBRARY_NAME} library."
           JIRA_DESCRIPTION=$(jq -n \
