@@ -131,7 +131,7 @@ jobs:
                  "content": [
                    {
                      "type": "text",
-                     "text": "Details: ",
+                     "text": "Detailss: ",
                      "marks": [{ "type": "strong" }]
                    },
                    {
