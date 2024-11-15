@@ -33,7 +33,7 @@ jobs:
         run: |
           cp .github/workflows/src/jira_api.sh /tmp/
           chmod +x /tmp/jira_api.sh
-          ls -la
+          ls -a
 
       - name: Search for existing Jira PBI
         run: |
