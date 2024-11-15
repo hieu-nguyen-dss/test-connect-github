@@ -34,8 +34,12 @@ jobs:
         run: |
           LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+) from.*/\1/')
           if [ -z "$LIBRARY_NAME" ]; then
+            echo "123"
             LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+( and [^ ]+)*).*/\1/')
-            exit 1
+            if [ -z "$LIBRARY_NAME" ]; then
+              echo "::error::Could not extract library name"
+              exit 1
+            fi
           fi
           JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"[dependency update]: ${LIBRARY_NAME}\""
           ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
