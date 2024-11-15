@@ -34,11 +34,15 @@ jobs:
         run: |
           if [[ "$PR_TITLE" =~ from[[:space:]][0-9]+\.[0-9]+\.[0-9]+[[:space:]]to[[:space:]][0-9]+\.[0-9]+\.[0-9]+ ]]; then
             # Nếu có, trích xuất tên thư viện với định dạng "Bump [library] from"
+            echo "PR title123: ${PR_TITLE}"
             LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+) from.*/\1/')
           else
             # Nếu không, trích xuất tên thư viện với định dạng "Bump [library] and [another library]"
+            echo "PR title: ${PR_TITLE}"
             LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+( and [^ ]+)*).*/\1/')
           fi
+
+          echo "Library name: ${LIBRARY_NAME}"
           JQL_QUERY="project=${JIRA_PROJECT_KEY} AND summary~\"[dependency update]: ${LIBRARY_NAME}\""
           ENCODED_JQL=$(echo "${JQL_QUERY}" | jq -sRr @uri)
 
