@@ -39,7 +39,7 @@ jobs:
           else
             # Nếu không, trích xuất tên thư viện với định dạng "Bump [library] and [another library]"
             echo "PR title: ${PR_TITLE}"
-            LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+( and [^ ]+)*).*/\1/')
+            LIBRARY_NAME=$(echo "${PR_TITLE}" | sed -E 's/.*Bump ([^ ]+( and [^ ]+)*).*/\1/' | sed 's/"$//')
           fi
 
           echo "Library name: ${LIBRARY_NAME}"
