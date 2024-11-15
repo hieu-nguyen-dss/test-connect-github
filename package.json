@@ -82,7 +82,7 @@
     "dependencies": {
         "short-unique-id": "^4.4.4",
         "pino-http": "^8.3.3",
-        "jwt-decode": "^3.1.2",
+        "jwt-decode": "^4.0.0",
         "diff": "^5.0.0"
     },
     "jest": {
