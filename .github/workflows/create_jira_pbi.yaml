@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.actor == 'dependabot[bot]' ||
-      startsWith(github.head_ref, 'dependabot/npm_and_yarn/')
+      startsWith(github.head_ref, 'dependabot')
 
     env:
       JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
