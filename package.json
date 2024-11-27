@@ -80,10 +80,9 @@
       "start:prod": "yarn start:prodコマンドはcloud側に使うとprocessは上手くkillできないので、yarnコマンドの代わりに直接nodeコマンドを使うようにしてください。"
     },
     "dependencies": {
-        "short-unique-id": "^4.4.4",
-        "pino-http": "^8.3.3",
-        "jwt-decode": "^3.1.2",
-        "diff": "^5.0.0"
+      "express": "^4.19.2",
+      "file-type": "16.5.4",
+      "google-gax": "3.6.1"
     },
     "jest": {
       "moduleFileExtensions": [
