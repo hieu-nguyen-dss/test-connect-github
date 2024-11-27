@@ -6,14 +6,13 @@ on:
       - opened
       - reopened
     branches:
-      - develop
-permissions:
-  contents: read
-  pull-requests: read
+      - 'develop'
 jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: |
+      github.actor == 'dependabot[bot]' ||
+      startsWith(github.head_ref, 'dependabot/npm_and_yarn/')
 
     env:
       JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
