@@ -11,7 +11,7 @@ jobs:
   create-jira-issue:
     runs-on: ubuntu-latest
     if: |
-      github.actor == 'dependabot[bot]' ||
+      github.actor == 'dependabot[bot]' &&
       startsWith(github.head_ref, 'dependabot')
 
     env:
