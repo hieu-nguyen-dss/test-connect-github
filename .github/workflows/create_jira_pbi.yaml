@@ -5,6 +5,7 @@ on:
     types:
       - opened
       - reopened
+      - synchronize
     branches:
       - 'develop'
 jobs:
@@ -150,6 +151,7 @@ jobs:
 
           PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
           if [ -n "$EXISTING_ISSUE_KEY" ]; then
+            echo "123"
             update_data=$(jq -n \
               --arg summary "$PR_SUMMARY" \
               --argjson desc "$JIRA_DESCRIPTION" \
@@ -158,6 +160,7 @@ jobs:
               '{"fields": {"summary": $summary, "description": $desc, ($field): $acc}}')
             call_jira_api "PUT" "/rest/api/3/issue/${EXISTING_ISSUE_KEY}" "$update_data"
           else
+            echo "234"
             create_data=$(jq -n \
               --arg key "$JIRA_PROJECT_KEY" \
               --arg summary "$PR_SUMMARY" \
