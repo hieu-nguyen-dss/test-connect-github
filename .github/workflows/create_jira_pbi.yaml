@@ -54,9 +54,11 @@ jobs:
           fi
 
           EXISTING_ISSUE_KEY=$(echo "$body" | jq -r '.issues[0]?.key // ""')
+          EXISTING_ISSUE_STATUS=$(echo "$body" | jq -r '.issues[0]?.fields?.status?.name // ""')
 
           {
             echo "EXISTING_ISSUE_KEY=${EXISTING_ISSUE_KEY}"
+            echo "EXISTING_ISSUE_STATUS=${EXISTING_ISSUE_STATUS}"
             echo "LIBRARY_NAME=${LIBRARY_NAME}"
           } >> "${GITHUB_ENV}"
 
@@ -89,6 +91,7 @@ jobs:
           }
           LIBRARY_NAME="${{ env.LIBRARY_NAME }}"
           EXISTING_ISSUE_KEY="${{ env.EXISTING_ISSUE_KEY }}"
+          EXISTING_ISSUE_STATUS="${{ env.EXISTING_ISSUE_STATUS }}"
 
           description_text="Update ${LIBRARY_NAME} library."
           JIRA_DESCRIPTION=$(jq -n \
@@ -150,7 +153,7 @@ jobs:
             }')
 
           PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
-          if [ -n "$EXISTING_ISSUE_KEY" ]; then
+          if [ -n "$EXISTING_ISSUE_KEY" ] && [ "$EXISTING_ISSUE_STATUS" != "Done" ]; then
             echo "123"
             update_data=$(jq -n \
               --arg summary "$PR_SUMMARY" \
