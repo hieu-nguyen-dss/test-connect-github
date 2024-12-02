@@ -55,7 +55,7 @@ jobs:
 
           EXISTING_ISSUE_KEY=$(echo "$body" | jq -r '.issues[0]?.key // ""')
           EXISTING_ISSUE_STATUS=$(echo "$body" | jq -r '.issues[0]?.fields?.status?.name // ""')
-
+          echo "EXISTING_ISSUE_STATUS: ${EXISTING_ISSUE_STATUS}"
           {
             echo "EXISTING_ISSUE_KEY=${EXISTING_ISSUE_KEY}"
             echo "EXISTING_ISSUE_STATUS=${EXISTING_ISSUE_STATUS}"
