@@ -154,7 +154,7 @@ jobs:
             }')
 
           PR_SUMMARY="[dependency update] ${LIBRARY_NAME}"
-          if [ -n "$EXISTING_ISSUE_KEY" ] && [ "$EXISTING_ISSUE_CATEGORY" != "Done" ]; then
+          if [ -n "$EXISTING_ISSUE_KEY" ] && [ "$EXISTING_ISSUE_CATEGORY" != "done" ]; then
             echo "123"
             update_data=$(jq -n \
               --arg summary "$PR_SUMMARY" \
